@@ -1,0 +1,8 @@
+This is a simple application demonstrating how to use version 1.0 of the Walkbase Footprint library.
+
+Looking at the code you will learn how to:
+	- Request hyperlocal place recommendations based on your current indoor location.
+	- Request a full list of locations from your own Footprint location list.
+	- Verify that your user is at a certain location.
+
+Note that Eclipse might whine about your build path. Simply change the build path to point to your local android_sdk path and you should be good to go.

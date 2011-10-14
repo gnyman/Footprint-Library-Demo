@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<RelativeLayout android:layout_height="wrap_content" android:id="@+id/buttonHolder" android:background="#d1d1d1" android:layout_width="fill_parent">
+		<Button android:text="Scan" android:layout_height="wrap_content"
+			android:layout_width="wrap_content" android:id="@+id/scanButton" android:layout_toRightOf="@+id/getListButton" android:layout_centerVertical="true"></Button>
+		<Button android:text="Get list of POI:s" android:layout_height="wrap_content" android:layout_width="wrap_content" android:id="@+id/getListButton" android:layout_centerVertical="true"></Button>
+	</RelativeLayout>
+
+	<ListView android:id="@+id/locationsList"
+		android:layout_width="fill_parent" android:smoothScrollbar="true"
+		android:cacheColorHint="#273544" android:background="#273544"
+		android:layout_height="fill_parent" android:layout_below="@+id/buttonHolder"></ListView>
+
+</RelativeLayout>
