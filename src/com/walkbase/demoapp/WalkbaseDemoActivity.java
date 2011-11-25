@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import com.walkbase.positioning.Positioning;
 import com.walkbase.positioning.Results;
-import com.walkbase.positioning.data.FootprintLocation;
+import com.walkbase.positioning.data.WalkbaseLocation;
 import com.walkbase.positioning.data.Recommendation;
 
 public class WalkbaseDemoActivity extends Activity {
@@ -45,11 +45,18 @@ public class WalkbaseDemoActivity extends Activity {
 	private final String LOCATION_LIST_IDENTIFIER = "4e945cd6bff5603f01000001";
 
 	private ArrayList<Recommendation> recommendations;
-	private ArrayList<FootprintLocation> footprintLocations;
+	private ArrayList<WalkbaseLocation> footprintLocations;
 
 	private WalkbaseReceiver walkbaseReceiver;
 	private ListView listView;
 
+	public void onStop() {
+		super.onStop();
+		
+		// App is being backgrounded -> unregister the receiver.
+		this.unregisterReceiver(walkbaseReceiver);
+	}
+	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
@@ -141,10 +148,10 @@ public class WalkbaseDemoActivity extends Activity {
 		// Look through the list of your own locations, find the item requested and verify it.
 		if(this.footprintLocations != null && this.footprintLocations.size() > 0) {
 			for(int i = 0; i < this.footprintLocations.size(); i++) {
-				FootprintLocation currentFootprintLocation = this.footprintLocations.get(i);
+				WalkbaseLocation currentWalkbaseLocation = this.footprintLocations.get(i);
 
-				if(currentFootprintLocation.getLocationName().equals(itemName)) {
-					verifyItem(currentFootprintLocation.getLocationName(), currentFootprintLocation.getLocationId());
+				if(currentWalkbaseLocation.getLocationName().equals(itemName)) {
+					verifyItem(currentWalkbaseLocation.getLocationName(), currentWalkbaseLocation.getLocationId());
 					return; // We found the match, don't continue looking.
 				}
 			}
@@ -227,9 +234,9 @@ public class WalkbaseDemoActivity extends Activity {
 						// Create a version of the list that includes only the names -> can be directly used for the ArrayAdapter.
 						ArrayList<String> readableList= new ArrayList<String>();
 						for(int i = 0; i < footprintLocations.size(); i++) {
-							FootprintLocation fp = footprintLocations.get(i);
-							readableList.add(fp.getLocationName());
-							Log.d("Parsed Location", fp.getLocationName());
+							WalkbaseLocation currentLocation = footprintLocations.get(i);
+							readableList.add(currentLocation.getLocationName());
+							Log.d("Parsed Location", currentLocation.getLocationName());
 						}
 
 						// We need a final version of the list to be able to access it in a worker thread.
