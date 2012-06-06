@@ -14,3 +14,9 @@ bin/com/walkbase/demoapp/WalkbaseDemoActivity$2.class
 bin/com/walkbase/demoapp/WalkbaseDemoActivity$WalkbaseReceiver.class
 
 bin/com/walkbase/demoapp/WalkbaseDemoActivity$WalkbaseReceiver.class
+WalkbaseDemo.iml
+WalkbaseDemo.eml
+.idea
+out
+project.properties
+gen
