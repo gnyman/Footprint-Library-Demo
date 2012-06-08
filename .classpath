@@ -2,6 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
+	<classpathentry kind="src" path="/WalkbaseDemo/tests"/>
+	<classpathentry kind="src" path="/WalkbaseDemo/src"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="lib" path="assets/walkbase.jar"/>
 	<classpathentry kind="output" path="bin"/>
