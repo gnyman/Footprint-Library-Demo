@@ -4,10 +4,8 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -22,9 +20,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.walkbase.positioning.Positioning;
-import com.walkbase.positioning.RecommendationRequest;
 import com.walkbase.positioning.Results;
-import com.walkbase.positioning.VerificationRequest;
 import com.walkbase.positioning.data.WalkbaseLocation;
 import com.walkbase.positioning.listeners.ListRequestListener;
 import com.walkbase.positioning.listeners.RecommendationRequestListener;
@@ -36,40 +32,30 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 	private static final String TAG = "WalkbaseDemoActivity.java";
 	private Handler handler;
 	private Positioning positioning;
-	private Button scanButton;
-	private Button getListButton;
 
-	/**
+    /**
 	 * If this is set to true, any verification scans sent are considered as
 	 * reference scans and are automatically considered as "trusted" scans.
 	 */
 	private final boolean CONSIDER_SCANS_AS_REFERENCE_SCANS = false;
 
 	// TODO: Replace this with your own key!
-	//private final String MY_API_KEY = "507b1679eb729150b06ac609e9f4321d80311800";
-    private final String MY_API_KEY = "falseApiKeyTest";
+	private final String MY_API_KEY = "507b1679eb729150b06ac609e9f4321d80311800";
 	// TODO: Replace this with your own location list!
 	private final String LOCATION_LIST_IDENTIFIER = "4e945cd6bff5603f01000001";
 
 	private ArrayList<WalkbaseLocation> recommendations;
 	private ArrayList<WalkbaseLocation> footprintLocations;
 
-	private WalkbaseReceiver walkbaseReceiver;
 	private ListView listView;
 
 	private int listType = 0;
-
-	public void onStop() {
-		super.onStop();
-
-		this.unregisterReceiver(walkbaseReceiver);
-	}
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		if (isOnline() == false) {
+		if (!isOnline()) {
 			/**
 			 * Check if there is a valid data connection. If not, let the user
 			 * know.
@@ -110,43 +96,38 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 		// key.
 		positioning = new Positioning(this, MY_API_KEY);
 
-		// Create & register the intent receiver
-		walkbaseReceiver = new WalkbaseReceiver();
-		this.registerReceiver(walkbaseReceiver, new IntentFilter(positioning.getPositioningIntentString()));
 
 		// Get a reference to the scan button in your XML UI.
-		scanButton = (Button) findViewById(R.id.scanButton);
+        Button scanButton = (Button) findViewById(R.id.scanButton);
 		scanButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
+            public void onClick(View v) {
 
-				/**
-				 * Make sure to check that the Positioning class has actually
-				 * received some coordinates. If it has not, getCoordinates()
-				 * will return NULL.
-				 */
-				if (positioning.getCoordinates() != null) {
-					String[] ids = { LOCATION_LIST_IDENTIFIER };
-					positioning.fetchRecommendations(WalkbaseDemoActivity.this, ids);
-				}
+                /**
+                 * Make sure to check that the Positioning class has actually
+                 * received some coordinates. If it has not, getCoordinates()
+                 * will return NULL.
+                 */
+                if (positioning.getCoordinates() != null) {
+                    String[] ids = {LOCATION_LIST_IDENTIFIER};
+                    positioning.fetchRecommendations(WalkbaseDemoActivity.this, ids);
+                } else {
+                    // Notify the user that he/she should try again.
+                    Toast.makeText(WalkbaseDemoActivity.this, "GPS position not yet available, please try again.", Toast.LENGTH_LONG).show();
+                }
 
-				else {
-					// Notify the user that he/she should try again.
-					Toast.makeText(WalkbaseDemoActivity.this, "GPS position not yet available, please try again.", Toast.LENGTH_LONG).show();
-				}
-
-			}
-		});
+            }
+        });
 
 		// Get a reference to the list button in your XML UI.
 		final ListRequestListener listener = this;
-		getListButton = (Button) findViewById(R.id.getListButton);
+        Button getListButton = (Button) findViewById(R.id.getListButton);
 		getListButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				// TODO: Remember to replace the value with the ID of your own
-				// location database.
-				positioning.fetchLocationList(LOCATION_LIST_IDENTIFIER, listener);
-			}
-		});
+            public void onClick(View v) {
+                // TODO: Remember to replace the value with the ID of your own
+                // location database.
+                positioning.fetchLocationList(LOCATION_LIST_IDENTIFIER, listener);
+            }
+        });
 	}
 
     private void commitData(int position) {
@@ -168,8 +149,7 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
     /**
 	 * Call this with the itemName from the ListView to verify it.
 	 * 
-	 * @param String
-	 *            The LocationName of the FootprintLocation / Recommendation
+	 * @param position  The LocationName of the FootprintLocation / Recommendation
 	 */
 	private void verifyClickedItem(int position) {
 		// Look through the list of recommendations, find the item requested and
@@ -205,7 +185,7 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 		 */
 		String[] listIds = { Positioning.LIST_ID_FOURQUARE };
 		//positioning.verifyLocation(itemId, itemName, CONSIDER_SCANS_AS_REFERENCE_SCANS, Positioning.NORMAL_VERIFICATION_OUTPUT, listIds);
-        positioning.verifyLocation(this,itemId,itemName,listIds,false);
+        positioning.verifyLocation(this,itemId,itemName,listIds,this.CONSIDER_SCANS_AS_REFERENCE_SCANS);
 	}
 
     @Override
@@ -234,52 +214,6 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
             }
         });
     }
-
-    public class WalkbaseReceiver extends BroadcastReceiver {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-
-			String action = intent.getAction();
-			if (action.equals(RecommendationRequest.RECOMMENDATION_REQUEST_SUCCESS)) {
-
-				int intentType = intent.getIntExtra(Positioning.POSITIONING_INTENT_TYPE, 0);
-
-				if (intentType == Positioning.ASSISTED_RECOMMENDATION || intentType == Positioning.NORMAL_RECOMMENDATION) {
-
-				} else if (action.equals(RecommendationRequest.RECOMMENDATION_REQUEST_FAIL)) {
-					Toast.makeText(WalkbaseDemoActivity.this, "Failed to receive recommendations", Toast.LENGTH_LONG).show();
-				} else if (action.equals(VerificationRequest.VERIFICATION_REQUEST_SUCCESS)) {
-
-					// Check the detailed type also
-					// TODO maybe move this into separate Intent Actions
-					if (intentType == Positioning.ASSISTED_VERIFICATION || intentType == Positioning.NORMAL_VERIFICATION) {
-
-					} // End if ASSISTED_VERIFICATION or NORMAL_VERIFICATION
-				}
-			}
-
-			/**
-			 * First, we check if there was an error completing the request.
-			 * 
-			 * If there was, you might want to display a message to the user or
-			 * try your request again.
-			 */
-			if (intent.hasExtra(Positioning.POSITIONING_HAS_ERROR)) {
-				String errorMessage = intent.getStringExtra(Positioning.POSITIONING_ERROR_MESSAGE);
-				Log.e("Error", errorMessage);
-				Toast.makeText(WalkbaseDemoActivity.this, "Failed with error: " + errorMessage, Toast.LENGTH_LONG).show();
-				return;
-			}
-
-			else {
-
-				int intentType = intent.getIntExtra(Positioning.POSITIONING_INTENT_TYPE, 0);
-				if (intentType == Positioning.LOCATION_LIST_RESPONSE) {
-
-				} // End if LOCATION_LIST_RESPONSE
-			}
-		}
-	}
 
 	private boolean isOnline() {
 
@@ -311,16 +245,15 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 
 	}
 
-	public void failedToGetRecoomendation(final int errorCode, final String errorMessage) {
+	public void failedToGetRecommendation(final int errorCode, final String errorMessage) {
 		this.runOnUiThread(new Runnable() {
 			public void run() {
-				Toast.makeText(WalkbaseDemoActivity.this, "Failed to get recommendations, errors was: " + errorMessage, Toast.LENGTH_LONG).show();
+				Toast.makeText(WalkbaseDemoActivity.this, "Failed to get recommendations, errorCode:"+ errorCode +"\n error description was: " + errorMessage, Toast.LENGTH_LONG).show();
 			}
 		});
 	}
 
-	public void didGetVerification(Results v) {
-		Results results = v;
+	public void didGetVerification(Results results) {
 		// Check that results are not NULL and that there's no error with the
 		// results.
 		if (results != null && results.hasError() == false) {
@@ -337,7 +270,7 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 	public void failedToGetVerification(final int errorCode, final String errorMessage) {
 		this.runOnUiThread(new Runnable() {
 			public void run() {
-				Toast.makeText(WalkbaseDemoActivity.this, "Failed to get verification, errors was: " + errorMessage, Toast.LENGTH_LONG).show();
+				Toast.makeText(WalkbaseDemoActivity.this, "Failed to get verification, errorCode:"+ errorCode + "\n error description was: " + errorMessage, Toast.LENGTH_LONG).show();
 			}
 		});
 	}
