@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +21,7 @@ import android.widget.Toast;
 import com.walkbase.positioning.Positioning;
 import com.walkbase.positioning.Results;
 import com.walkbase.positioning.data.WalkbaseLocation;
+import com.walkbase.positioning.exceptions.GeneralLibraryException;
 import com.walkbase.positioning.listeners.ListRequestListener;
 import com.walkbase.positioning.listeners.RecommendationRequestListener;
 import com.walkbase.positioning.listeners.VerificationRequestListener;
@@ -95,7 +95,7 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 		// Create a new Positioning object with the current context & your API
 		// key.
 		positioning = new Positioning(this, MY_API_KEY);
-
+		positioning.setForceWifiOn(false);
 
 		// Get a reference to the scan button in your XML UI.
         Button scanButton = (Button) findViewById(R.id.scanButton);
@@ -109,7 +109,12 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
                  */
                 if (positioning.getCoordinates() != null) {
                     String[] ids = {LOCATION_LIST_IDENTIFIER};
-                    positioning.fetchRecommendations(WalkbaseDemoActivity.this, ids);
+                    try {
+						positioning.fetchRecommendations(WalkbaseDemoActivity.this, ids);
+					} catch (GeneralLibraryException e) {
+						Log.d(TAG,"Error fetching recommendations, error was: " + e.getMessage());
+						e.printStackTrace();
+					}
                 } else {
                     // Notify the user that he/she should try again.
                     Toast.makeText(WalkbaseDemoActivity.this, "GPS position not yet available, please try again.", Toast.LENGTH_LONG).show();
@@ -125,7 +130,12 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
             public void onClick(View v) {
                 // TODO: Remember to replace the value with the ID of your own
                 // location database.
-                positioning.fetchLocationList(LOCATION_LIST_IDENTIFIER, listener);
+                try {
+					positioning.fetchLocationList(LOCATION_LIST_IDENTIFIER, listener);
+				} catch (GeneralLibraryException e) {
+					Log.d(TAG,"Error fetching list, error was: " + e.getMessage());
+					e.printStackTrace();
+				}
             }
         });
 	}
@@ -136,12 +146,22 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
         {
             if (this.footprintLocations != null && this.footprintLocations.size() > 0) {
                 WalkbaseLocation currentWalkbaseLocation = this.footprintLocations.get(position);
-                this.positioning.commitData(this,currentWalkbaseLocation.locationId,currentWalkbaseLocation.locationName,ids,false,5);
+                try {
+					this.positioning.commitData(this,currentWalkbaseLocation.locationId,currentWalkbaseLocation.locationName,ids,false,5);
+				} catch (GeneralLibraryException e) {
+					Log.d(TAG,"Error checking in, error was " + e.getMessage());
+					e.printStackTrace();
+				}
             }
         } else if (listType == 2) {
             if (this.recommendations != null && this.recommendations.size() > 0) {
                 WalkbaseLocation currentRecommendation = this.recommendations.get(position);
-                this.positioning.commitData(this, currentRecommendation.locationId, currentRecommendation.locationName, ids, false, 5);
+                try {
+					this.positioning.commitData(this, currentRecommendation.locationId, currentRecommendation.locationName, ids, false, 5);
+				} catch (GeneralLibraryException e) {
+					Log.d(TAG,"Error checking in, error was " + e.getMessage());
+					e.printStackTrace();
+				}
             }
         }
     }
@@ -185,10 +205,14 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
 		 */
 		String[] listIds = { Positioning.LIST_ID_FOURQUARE };
 		//positioning.verifyLocation(itemId, itemName, CONSIDER_SCANS_AS_REFERENCE_SCANS, Positioning.NORMAL_VERIFICATION_OUTPUT, listIds);
-        positioning.verifyLocation(this,itemId,itemName,listIds,this.CONSIDER_SCANS_AS_REFERENCE_SCANS);
+        try {
+			positioning.verifyLocation(this,itemId,itemName,listIds,this.CONSIDER_SCANS_AS_REFERENCE_SCANS);
+		} catch (GeneralLibraryException e) {
+			Log.d(TAG,"Error checking in, error was: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
-    @Override
     public void updateProgress(final int currentCount,final int totalCount) {
         this.runOnUiThread(new Runnable() {
             public void run() {
@@ -197,7 +221,6 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
         });
     }
 
-    @Override
     public void didCommitData(final int successCount) {
         this.runOnUiThread(new Runnable() {
             public void run() {
@@ -206,7 +229,6 @@ public class WalkbaseDemoActivity extends Activity implements VerificationReques
         });
     }
 
-    @Override
     public void failedToCommitData(final int errorCode,final String message,final int successCount) {
         this.runOnUiThread(new Runnable() {
             public void run() {
